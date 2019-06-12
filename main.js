@@ -33,8 +33,7 @@ function update(timestamp){
     }
     lastTimestamp=timestamp;
 
-    var sensors=updateSensors(rocket);
-    //processInput();
+    processInput();
 
     requestAnimationFrame(update);
     render();
@@ -114,10 +113,6 @@ function processInput(){
     rocket.t+=rocket.w*speeds.wScale*elapsedTime;
     rocket.x+=rocket.vx*speeds.vScale*elapsedTime;
     rocket.y+=rocket.vy*speeds.vScale*elapsedTime;
-}
-
-function updateSensors(rocket){
-    var sensors=[0,0,0,0,0,0,0,0];
 }
 
 var Asset={};
