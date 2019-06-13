@@ -173,12 +173,22 @@ class Rocket{
             return;
         }
         for(var i=0;i<8;i++){
-            for(var d=1;d<=this.sensorDistance[i];d++){
+            /*for(var d=1;d<=this.sensorDistance[i];d++){
                 if(!ctx.isPointInPath(map, this.x+d*math.cos(this.t+sensorDirections[i]), this.y+d*math.sin(this.t+sensorDirections[i]))){
                     break;
                 }
-                this.sensors[i]=d/this.sensorDistance[i];
+                this.sensors[i]=1-d/this.sensorDistance[i];
+            }*/
+            // binary search may be not suitable for small corners
+            var d=this.sensorDistance[i]/2;
+            for(var dd=this.sensorDistance[i]/4; dd>=1; dd/=2){
+                if(ctx.isPointInPath(map, this.x+d*math.cos(this.t+sensorDirections[i]), this.y+d*math.sin(this.t+sensorDirections[i]))){
+                    d+=dd;
+                }else{
+                    d-=dd;
+                }
             }
+            this.sensors[i]=1-d/this.sensorDistance[i];
         }
         this.sensors[8]=this.score-this.lastCheckpoint;
         this.sensors[9]=this.w/ROTATEMAX;
@@ -286,7 +296,7 @@ function render(rockets, checkpoints, generation, topAliveScore){
             ctx.strokeStyle="blue";
             for(var i=0;i<8;i++){
                 ctx.beginPath();
-                ctx.arc(rockets[r].x+rockets[r].sensors[i]*rockets[r].sensorDistance[i]*math.cos(rockets[r].t+sensorDirections[i]), rockets[r].y+rockets[r].sensors[i]*rockets[r].sensorDistance[i]*math.sin(rockets[r].t+sensorDirections[i]), 1, 0, math.pi*2, false);
+                ctx.arc(rockets[r].x+(1-rockets[r].sensors[i])*rockets[r].sensorDistance[i]*math.cos(rockets[r].t+sensorDirections[i]), rockets[r].y+(1-rockets[r].sensors[i])*rockets[r].sensorDistance[i]*math.sin(rockets[r].t+sensorDirections[i]), 1, 0, math.pi*2, false);
                 ctx.closePath();
                 ctx.fill();
                 /*ctx.beginPath();
@@ -350,20 +360,6 @@ function keyDownCallback(e){
 
 function keyUpCallback(e){
     keyDown[e.keyCode]=false;
-}
-
-function updateSensors(rocket, sensorDistance){
-    var sensors=[0,0,0,0,0,0,0,0];
-    var sensorDirections=[0, math.pi/4, math.pi/2, math.pi*3/4, math.pi, math.pi*5/4, math.pi*3/2, math.pi*7/4];
-    for(var i=0;i<8;i++){
-        for(var d=1;d<=sensorDistance[i];d++){
-            if(!ctx.isPointInPath(sugoMap, rocket.x+sensors[i]*math.cos(rocket.t+sensorDirections[i]), rocket.y+sensors[i]*math.sin(rocket.t+sensorDirections[i]))){
-                break;
-            }
-            sensors[i]=d;
-        }
-    }
-    return sensors;
 }
 
 function getInput(){
