@@ -12,8 +12,8 @@ var speeds={
 }
 var INITIAL_ROCKETS=20;
 var SPEEDMAX=5;
-var ELITENUM=10;
-var sensorDirectories=[0, math.pi/256, math.pi/2, math.pi*255/256, math.pi, math.pi*257/256, math.pi*3/2, math.pi*511/256];
+var ELITENUM=3;
+var sensorDirectories=[0, math.pi/128, math.pi/2, math.pi*127/128, math.pi, math.pi*129/128, math.pi*3/2, math.pi*255/128];
 
 function init(){
     // initialization
@@ -53,7 +53,7 @@ function update(timestamp){
             rockets[i].calcScore(checkpoints);
         }
     }
-    if(aliveRocket<=rockets.length/3){
+    if(aliveRocket<=rockets.length/2){
         rockets.sort(function(a,b){
             if(a.lastCheckpoint==b.lastCheckpoint){
                 if(a.distanceToNextCheckpoint>b.distanceToNextCheckpoint){
@@ -71,7 +71,7 @@ function update(timestamp){
         for(var i=0;i<rockets.length;i++){
             var dice=math.random();
             var eliteIdx=math.randomInt(ELITENUM);
-            if(dice<0.5){
+            if(dice<0.1){
                 // mutation
                 newRockets.push(Object.assign(new Rocket(), rockets[eliteIdx]));
                 /*for(var j=0;j<newRockets[newRockets.length-1].sensorDistance.length;j++){
@@ -79,22 +79,22 @@ function update(timestamp){
                         newRockets[newRockets.length-1].sensorDistance[j]*=math.random(2);
                     }
                 }*/
-                newRockets[newRockets.length-1].NN.A=math.flatten(newRockets[newRockets.length-1].NN.A);
-                for(var j=0;j<newRockets[newRockets.length-1].NN.A.length;j++){
-                    if(math.random()<0.1){
-                        newRockets[newRockets.length-1].NN.A[j]=newRockets[newRockets.length-1].NN.A[j]*math.random(3)-1.5;
+                for(var j=0;j<math.size(newRockets[newRockets.length-1].NN.A)[0];j++){
+                    for(var k=0;k<math.size(newRockets[newRockets.length-1].NN.A)[1];k++){
+                        if(math.random()<0.1){
+                            newRockets[newRockets.length-1].NN.A[j][k]=newRockets[newRockets.length-1].NN.A[j][k]*math.random(3)-1.5;
+                        }
                     }
                 }
-                newRockets[newRockets.length-1].NN.A=math.reshape(newRockets[newRockets.length-1].NN.A, [9,8]);
-                newRockets[newRockets.length-1].NN.B=math.flatten(newRockets[newRockets.length-1].NN.B);
-                for(var j=0;j<newRockets[newRockets.length-1].NN.B.length;j++){
-                    if(math.random()<0.1){
-                        newRockets[newRockets.length-1].NN.B[j]=newRockets[newRockets.length-1].NN.B[j]*math.random(3)-1.5;
+                for(var j=0;j<math.size(newRockets[newRockets.length-1].NN.B)[0];j++){
+                    for(var k=0;k<math.size(newRockets[newRockets.length-1].NN.B)[1];k++){
+                        if(math.random()<0.1){
+                            newRockets[newRockets.length-1].NN.B[j][k]=newRockets[newRockets.length-1].NN.B[j][k]*math.random(3)-1.5;
+                        }
                     }
                 }
-                newRockets[newRockets.length-1].NN.B=math.reshape(newRockets[newRockets.length-1].NN.B, [8,4]);
                 newRockets[newRockets.length-1].resetState();
-            }else if(dice<0.9){
+            }else if(dice<0.8){
                 // crossover
                 newRockets.push(Object.assign(new Rocket(), rockets[eliteIdx]));
                 var pair=(eliteIdx+math.randomInt(ELITENUM))%ELITENUM;
@@ -103,20 +103,16 @@ function update(timestamp){
                 /*for(var j=crossoverBegin;j<crossoverEnd;j++){
                     newRockets[newRockets.length-1].sensorDistance[j]=rockets[pair].sensorDistance[j];
                 }*/
-                newRockets[newRockets.length-1].NN.A=math.flatten(newRockets[newRockets.length-1].NN.A);
                 crossoverBegin=math.randomInt(newRockets[newRockets.length-1].NN.A.length);
                 crossoverEnd=math.randomInt(crossoverBegin, newRockets[newRockets.length-1].NN.A.length);
                 for(var j=crossoverBegin;j<crossoverEnd;j++){
-                    newRockets[newRockets.length-1].NN.A[j]=rockets[pair].NN.A[j];
+                    newRockets[newRockets.length-1].NN.A[math.floor(j/math.size(newRockets[newRockets.length-1].NN.A)[1])][j%math.size(newRockets[newRockets.length-1].NN.A)[1]]=rockets[pair].NN.A[math.floor(j/math.size(newRockets[newRockets.length-1].NN.A)[1])][j%math.size(newRockets[newRockets.length-1].NN.A)[1]];
                 }
-                newRockets[newRockets.length-1].NN.A=math.reshape(newRockets[newRockets.length-1].NN.A, [9,8]);
-                newRockets[newRockets.length-1].NN.B=math.flatten(newRockets[newRockets.length-1].NN.B);
                 crossoverBegin=math.randomInt(newRockets[newRockets.length-1].NN.B.length);
                 crossoverEnd=math.randomInt(crossoverBegin, newRockets[newRockets.length-1].NN.B.length);
                 for(var j=crossoverBegin;j<crossoverEnd;j++){
-                    newRockets[newRockets.length-1].NN.B[j]=rockets[pair].NN.B[j];
+                    newRockets[newRockets.length-1].NN.B[math.floor(j/math.size(newRockets[newRockets.length-1].NN.B)[1])][j%math.size(newRockets[newRockets.length-1].NN.B)[1]]=rockets[pair].NN.B[math.floor(j/math.size(newRockets[newRockets.length-1].NN.B)[1])][j%math.size(newRockets[newRockets.length-1].NN.B)[1]];
                 }
-                newRockets[newRockets.length-1].NN.B=math.reshape(newRockets[newRockets.length-1].NN.B, [8,4]);
                 newRockets[newRockets.length-1].resetState();
             }else{
                 // copy
@@ -220,7 +216,7 @@ class Rocket{
         if(this.wasd[3])this.w+=speeds.ADAcceleration;
 
         if(this.vx==0 && this.vy==0){
-            this.alive=false;
+            //this.alive=false;
         }
     
         this.t+=this.w*speeds.wScale*elapsedTime;
