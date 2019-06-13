@@ -85,14 +85,14 @@ function update(timestamp){
                         newRockets[newRockets.length-1].NN.A[j]=newRockets[newRockets.length-1].NN.A[j]*math.random(3)-1.5;
                     }
                 }
-                newRockets[newRockets.length-1].NN.A=math.resize(newRockets[newRockets.length-1].NN.A, [9,8]);
+                newRockets[newRockets.length-1].NN.A=math.reshape(newRockets[newRockets.length-1].NN.A, [9,8]);
                 newRockets[newRockets.length-1].NN.B=math.flatten(newRockets[newRockets.length-1].NN.B);
                 for(var j=0;j<newRockets[newRockets.length-1].NN.B.length;j++){
                     if(math.random()<0.1){
                         newRockets[newRockets.length-1].NN.B[j]=newRockets[newRockets.length-1].NN.B[j]*math.random(3)-1.5;
                     }
                 }
-                newRockets[newRockets.length-1].NN.B=math.resize(newRockets[newRockets.length-1].NN.B, [8,4]);
+                newRockets[newRockets.length-1].NN.B=math.reshape(newRockets[newRockets.length-1].NN.B, [8,4]);
                 newRockets[newRockets.length-1].resetState();
             }else if(dice<0.9){
                 // crossover
@@ -109,14 +109,14 @@ function update(timestamp){
                 for(var j=crossoverBegin;j<crossoverEnd;j++){
                     newRockets[newRockets.length-1].NN.A[j]=rockets[pair].NN.A[j];
                 }
-                newRockets[newRockets.length-1].NN.A=math.resize(newRockets[newRockets.length-1].NN.A, [9,8]);
+                newRockets[newRockets.length-1].NN.A=math.reshape(newRockets[newRockets.length-1].NN.A, [9,8]);
                 newRockets[newRockets.length-1].NN.B=math.flatten(newRockets[newRockets.length-1].NN.B);
                 crossoverBegin=math.randomInt(newRockets[newRockets.length-1].NN.B.length);
                 crossoverEnd=math.randomInt(crossoverBegin, newRockets[newRockets.length-1].NN.B.length);
                 for(var j=crossoverBegin;j<crossoverEnd;j++){
                     newRockets[newRockets.length-1].NN.B[j]=rockets[pair].NN.B[j];
                 }
-                newRockets[newRockets.length-1].NN.B=math.resize(newRockets[newRockets.length-1].NN.B, [8,4]);
+                newRockets[newRockets.length-1].NN.B=math.reshape(newRockets[newRockets.length-1].NN.B, [8,4]);
                 newRockets[newRockets.length-1].resetState();
             }else{
                 // copy
