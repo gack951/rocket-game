@@ -20,6 +20,7 @@ var HIDDEN_SIZE=32;
 var OUTPUT_SIZE=4;
 var checkpoints=[[390, 89], [1030, 95], [1045, 215], [855, 245], [790, 460], [920, 415], [1150, 215], [1260, 330], [490, 645], [530, 390], [410, 285], [110, 365], [15, 250], [90, 120]];
 var betweenCheckpoints=[];
+var topScoreHistory=[0];
 
 function init(){
     // initialization
@@ -70,6 +71,9 @@ function update(timestamp){
     });
     topAliveScore=-1;
     for(var i=0;i<rockets.length; i++){
+        if(topScoreHistory[topScoreHistory.length-1]<rockets[i].score){
+            topScoreHistory[topScoreHistory.length-1]=rockets[i].score;
+        }
         if(rockets[i].alive){
             if(topAliveScore<rockets[i].score){
                 topAliveScore=rockets[i].score;
@@ -123,7 +127,8 @@ function update(timestamp){
 
         rockets=newRockets;
         topCheckpoint=0;
-        generation++
+        generation++;
+        topScoreHistory.push(0);
     }else{
         lastTopAliveScore=topAliveScore;
     }
@@ -341,6 +346,20 @@ function render(rockets, checkpoints, generation, topAliveScore){
             ctx.fillText("!", 280, 400+12*renderedRocket);
         }
     }
+    ctx.strokeStyle="black";
+    ctx.beginPath();
+    ctx.moveTo(750, 600);
+    ctx.lineTo(750, 700);
+    ctx.lineTo(1200, 700);
+    ctx.stroke();
+    var historyMax=math.max(topScoreHistory);
+    ctx.beginPath();
+    ctx.moveTo(750, 700-topScoreHistory[0]/historyMax*100);
+    for(var i=1;i<topScoreHistory.length;i++){
+        ctx.lineTo(750+i/(topScoreHistory.length-1)*450, 700-topScoreHistory[i]/historyMax*100);
+    }
+    ctx.stroke();
+    ctx.fillText(historyMax.toFixed(2), 720, 620);
     ctx.fillText((1/elapsedTime).toFixed(1)+" fps", 0, 12);
     ctx.fillText(aliveRocket+"", 50, 12);
     ctx.fillText("Gen "+generation, 80, 12);
