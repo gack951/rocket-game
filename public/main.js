@@ -18,7 +18,7 @@ var sensorDirections=[0, math.pi/64, math.pi/2, math.pi*63/64, math.pi, math.pi*
 var SENSOR_SIZE=11;
 var HIDDEN_SIZE=32;
 var OUTPUT_SIZE=4;
-var checkpoints=[[390, 89], [1000, 90], [1045, 215], [855, 245], [790, 460], [920, 415], [1150, 215], [1260, 330], [490, 645], [530, 390], [410, 285], [110, 365], [15, 250], [90, 120]];
+var checkpoints=[[390, 89], [1030, 95], [1045, 215], [855, 245], [790, 460], [920, 415], [1150, 215], [1260, 330], [490, 645], [530, 390], [410, 285], [110, 365], [15, 250], [90, 120]];
 var betweenCheckpoints=[];
 
 function init(){
@@ -266,6 +266,9 @@ class Rocket{
             this.distanceToNextCheckpoint=math.norm(math.subtract([this.x, this.y], checkpoints[(this.lastCheckpoint+1)%checkpoints.length]));
         }
         this.score=this.lastCheckpoint+1-this.distanceToNextCheckpoint/betweenCheckpoints[this.lastCheckpoint];
+        if(this.score<0){
+            this.alive=false;
+        }
     }
 }
 
