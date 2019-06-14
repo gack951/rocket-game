@@ -6,16 +6,16 @@ var SCREEN_WIDTH=1280;
 var SCREEN_HEIGHT=720;
 var speeds={
     WSAcceleration: 0.5,
-    ADAcceleration: math.pi/100,
+    ADAcceleration: math.pi/64,
     wScale: 1,
     vScale: 10,
 }
-var INITIAL_ROCKETS=20;
+var INITIAL_ROCKETS=25;
 var SPEEDMAX=10;
-var ROTATEMAX=5;
+var ROTATEMAX=2*math.pi;
 var ELITENUM=5;
 var sensorDirections=[0, math.pi/64, math.pi/2, math.pi*63/64, math.pi, math.pi*65/64, math.pi*3/2, math.pi*127/64];
-var SENSOR_SIZE=12;
+var SENSOR_SIZE=11;
 var HIDDEN_SIZE=32;
 var OUTPUT_SIZE=4;
 var checkpoints=[[390, 89], [1000, 90], [1045, 215], [855, 245], [790, 460], [920, 415], [1150, 215], [1260, 330], [490, 645], [530, 390], [410, 285], [110, 365], [15, 250], [90, 120]];
@@ -77,7 +77,7 @@ function update(timestamp){
             break;
         }
     }
-    if(lastTopAliveScore==topAliveScore){
+    if(keyDown[key.R] || lastTopAliveScore==topAliveScore){
         var newRockets=[];
         for(var i=0;i<rockets.length;i++){
             var dice=math.random();
@@ -127,8 +127,8 @@ function update(timestamp){
     }else{
         lastTopAliveScore=topAliveScore;
     }
-    requestAnimationFrame(update);
     aliveRocket=render(rockets, checkpoints, generation, topAliveScore);
+    requestAnimationFrame(update);
 }
 
 class Rocket{
@@ -149,7 +149,8 @@ class Rocket{
         this.sensors[SENSOR_SIZE-2]=-1;
         this.sensors[SENSOR_SIZE-1]=1;
         this.NN_A=math.random([SENSOR_SIZE, HIDDEN_SIZE], -1, 1);
-        this.NN_hidden=new Array(HIDDEN_SIZE);
+        this.NN_hidden=math.zeros(HIDDEN_SIZE);
+        this.NN_R=math.random([HIDDEN_SIZE, HIDDEN_SIZE], -1, 1);
         this.NN_B=math.random([HIDDEN_SIZE, OUTPUT_SIZE], -1, 1);
         this.NN_output=new Array(OUTPUT_SIZE);
         this.wasd=new Array(4);
@@ -166,6 +167,7 @@ class Rocket{
         this.w=0;
         this.lastCheckpoint=0;
         this.distanceToNextCheckpoint=0;
+        this.NN_hidden=math.zeros(HIDDEN_SIZE);
     }
 
     updateSensors(map){
@@ -191,28 +193,27 @@ class Rocket{
             }
             this.sensors[i]=1-d/this.sensorDistance[i];
         }
-        this.sensors[8]=this.score-this.lastCheckpoint;
-        this.sensors[9]=this.w/ROTATEMAX;
+        this.sensors[8]=this.w/ROTATEMAX;
     }
 
     computeNN(){
         //this.NN_hidden=math.dotDivide(1, math.add(1, math.exp(math.multiply(-1, math.multiply(this.sensors, this.NN_A)))));
-        this.NN_hidden=math.multiply(this.sensors, this.NN_A);
-        this.NN_output=math.dotDivide(1, math.add(1, math.exp(math.multiply(-1, math.multiply(this.NN_hidden, this.NN_B)))));
-        if(this.NN_output[0]>0.5 && this.NN_output[0]>this.NN_output[2]){
+        this.NN_hidden=math.add(math.multiply(this.sensors, this.NN_A), math.multiply(this.NN_hidden, this.NN_R));
+        this.NN_output=math.dotDivide(1, math.add(1, math.exp(math.multiply(-1, math.multiply(this.NN_hidden, this.NN_B)))))._data;
+        if(this.NN_output[0]-this.NN_output[2]>0.5){
             this.wasd[0]=true;
             this.wasd[2]=false;
-        }else if(this.NN_output[2]>0.5 && this.NN_output[2]>this.NN_output[0]){
+        }else if(this.NN_output[0]-this.NN_output[2]<-0.5){
             this.wasd[0]=false;
             this.wasd[2]=true;
         }else{
             this.wasd[0]=false;
             this.wasd[2]=false;
         }
-        if(this.NN_output[1]>0.5 && this.NN_output[1]>this.NN_output[3]){
+        if(this.NN_output[1]-this.NN_output[3]>0.5){
             this.wasd[1]=true;
             this.wasd[3]=false;
-        }else if(this.NN_output[3]>0.5 && this.NN_output[3]>this.NN_output[1]){
+        }else if(this.NN_output[1]-this.NN_output[3]<-0.5){
             this.wasd[1]=false;
             this.wasd[3]=true;
         }else{
@@ -352,7 +353,8 @@ var key={
     W: 87,
     A: 65,
     S: 83,
-    D: 68
+    D: 68,
+    R: 82
 };
 
 function keyDownCallback(e){
