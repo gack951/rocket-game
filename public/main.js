@@ -17,6 +17,7 @@ var ELITENUM=5;
 var sensorDirections=[0, math.pi/64, math.pi/2, math.pi*63/64, math.pi, math.pi*65/64, math.pi*3/2, math.pi*127/64];
 var SENSOR_SIZE=11;
 var HIDDEN_SIZE=32;
+var HIDDEN_LAYER=2;
 var OUTPUT_SIZE=4;
 var checkpoints=[[390, 89], [1030, 95], [1045, 215], [855, 245], [790, 460], [920, 415], [1150, 215], [1260, 330], [490, 645], [530, 390], [410, 285], [110, 365], [15, 250], [90, 120]];
 var betweenCheckpoints=[];
@@ -28,7 +29,7 @@ function init(){
     ctx=canvas.getContext("2d");
     canvas.width=SCREEN_WIDTH;
     canvas.height=SCREEN_HEIGHT;
-    ctx.font="12px Arial";
+    ctx.font="12px Consolas";
     ctx.fillStyle="black";
     Asset.loadAssets(function(){
         requestAnimationFrame(update);
@@ -82,6 +83,7 @@ function update(timestamp){
         }
     }
     if(keyDown[key.R] || lastTopAliveScore==topAliveScore){
+        // new generation
         var newRockets=[];
         for(var i=0;i<rockets.length;i++){
             var dice=math.random();
@@ -96,6 +98,22 @@ function update(timestamp){
                         }
                     }
                 }
+                for(var l=0;l<HIDDEN_LAYER;l++){
+                    for(var j=0;j<HIDDEN_SIZE;j++){
+                        for(var k=0;k<HIDDEN_SIZE;k++){
+                            if(math.random()<0.02){
+                                newRockets[newRockets.length-1].NN_R[l][j][k]=math.random(-1, 1);
+                            }
+                        }
+                    }
+                    for(var j=0;j<HIDDEN_SIZE;j++){
+                        for(var k=0;k<HIDDEN_SIZE;k++){
+                            if(math.random()<0.02){
+                                newRockets[newRockets.length-1].NN_F[l][j][k]=math.random(-1, 1);
+                            }
+                        }
+                    }
+                }
                 for(var j=0;j<HIDDEN_SIZE;j++){
                     for(var k=0;k<OUTPUT_SIZE;k++){
                         if(math.random()<0.02){
@@ -103,7 +121,7 @@ function update(timestamp){
                         }
                     }
                 }
-                newRockets[newRockets.length-1].born="mu";
+                newRockets[newRockets.length-1].born="mutation";
             }else if(dice<0.9){
                 // crossover
                 var pair=(eliteIdx+math.randomInt(ELITENUM))%ELITENUM;
@@ -112,15 +130,27 @@ function update(timestamp){
                 for(var j=crossoverBegin;j<crossoverEnd;j++){
                     newRockets[newRockets.length-1].NN_A[math.floor(j/HIDDEN_SIZE)][j%HIDDEN_SIZE]=rockets[pair].NN_A[math.floor(j/HIDDEN_SIZE)][j%HIDDEN_SIZE];
                 }
+                for(var l=0;l<HIDDEN_LAYER;l++){
+                    var crossoverBegin=math.randomInt(HIDDEN_SIZE*HIDDEN_SIZE);
+                    var crossoverEnd=math.randomInt(crossoverBegin, HIDDEN_SIZE*HIDDEN_SIZE);
+                    for(var j=crossoverBegin;j<crossoverEnd;j++){
+                        newRockets[newRockets.length-1].NN_R[l][math.floor(j/HIDDEN_SIZE)][j%HIDDEN_SIZE]=rockets[pair].NN_R[l][math.floor(j/HIDDEN_SIZE)][j%HIDDEN_SIZE];
+                    }
+                    var crossoverBegin=math.randomInt(HIDDEN_SIZE*HIDDEN_SIZE);
+                    var crossoverEnd=math.randomInt(crossoverBegin, HIDDEN_SIZE*HIDDEN_SIZE);
+                    for(var j=crossoverBegin;j<crossoverEnd;j++){
+                        newRockets[newRockets.length-1].NN_F[l][math.floor(j/HIDDEN_SIZE)][j%HIDDEN_SIZE]=rockets[pair].NN_F[l][math.floor(j/HIDDEN_SIZE)][j%HIDDEN_SIZE];
+                    }
+                }
                 crossoverBegin=math.randomInt(HIDDEN_SIZE*OUTPUT_SIZE);
                 crossoverEnd=math.randomInt(crossoverBegin, HIDDEN_SIZE*OUTPUT_SIZE);
                 for(var j=crossoverBegin;j<crossoverEnd;j++){
                     newRockets[newRockets.length-1].NN_B[math.floor(j/OUTPUT_SIZE)][j%OUTPUT_SIZE]=rockets[pair].NN_B[math.floor(j/OUTPUT_SIZE)][j%OUTPUT_SIZE];
                 }
-                newRockets[newRockets.length-1].born="ov";
+                newRockets[newRockets.length-1].born="cross";
             }else{
                 // copy
-                newRockets[newRockets.length-1].born="cp";
+                newRockets[newRockets.length-1].born="copy";
             }
             newRockets[newRockets.length-1].resetState();
         }
@@ -154,12 +184,18 @@ class Rocket{
         this.sensors[SENSOR_SIZE-2]=-1;
         this.sensors[SENSOR_SIZE-1]=1;
         this.NN_A=math.random([SENSOR_SIZE, HIDDEN_SIZE], -1, 1);
-        this.NN_hidden=math.zeros(HIDDEN_SIZE);
-        this.NN_R=math.random([HIDDEN_SIZE, HIDDEN_SIZE], -1, 1);
+        this.NN_hidden=[];
+        this.NN_R=[];
+        this.NN_F=[];
+        for(var i=0;i<HIDDEN_LAYER;i++){
+            this.NN_hidden.push(math.zeros(HIDDEN_SIZE));
+            this.NN_R.push(math.random([HIDDEN_SIZE, HIDDEN_SIZE], -1, 1));
+            this.NN_F.push(math.random([HIDDEN_SIZE, HIDDEN_SIZE], -1, 1));
+        }
         this.NN_B=math.random([HIDDEN_SIZE, OUTPUT_SIZE], -1, 1);
         this.NN_output=new Array(OUTPUT_SIZE);
         this.wasd=new Array(4);
-        this.born="na";
+        this.born="random";
     }
 
     resetState(){
@@ -172,7 +208,10 @@ class Rocket{
         this.w=0;
         this.lastCheckpoint=0;
         this.distanceToNextCheckpoint=0;
-        this.NN_hidden=math.zeros(HIDDEN_SIZE);
+        this.NN_hidden=[];
+        for(var i=0;i<HIDDEN_LAYER;i++){
+            this.NN_hidden.push(math.zeros(HIDDEN_SIZE));
+        }
     }
 
     updateSensors(map){
@@ -203,8 +242,14 @@ class Rocket{
 
     computeNN(){
         //this.NN_hidden=math.dotDivide(1, math.add(1, math.exp(math.multiply(-1, math.multiply(this.sensors, this.NN_A)))));
-        this.NN_hidden=math.add(math.multiply(this.sensors, this.NN_A), math.multiply(this.NN_hidden, this.NN_R));
-        this.NN_output=math.dotDivide(1, math.add(1, math.exp(math.multiply(-1, math.multiply(this.NN_hidden, this.NN_B)))))._data;
+        this.NN_hidden[0]=math.dotDivide(1, math.add(1, math.exp(math.multiply(-1, math.add(math.multiply(this.sensors, this.NN_A), math.multiply(this.NN_hidden[0], this.NN_R[0]))))));
+        if(isNaN(this.NN_hidden[0]._data[0])){
+            ctx.fillText("NaN", 360, 400);
+        }
+        for(var i=1;i<HIDDEN_LAYER;i++){
+            this.NN_hidden[i]=math.dotDivide(1, math.add(1, math.exp(math.multiply(-1, math.add(math.multiply(this.NN_hidden[i-1], this.NN_F[i-1]), math.multiply(this.NN_hidden[i], this.NN_R[i]))))));
+        }
+        this.NN_output=math.dotDivide(1, math.add(1, math.exp(math.multiply(-1, math.multiply(this.NN_hidden[HIDDEN_LAYER-1], this.NN_B)))))._data;
         if(this.NN_output[0]-this.NN_output[2]>0.5){
             this.wasd[0]=true;
             this.wasd[2]=false;
@@ -328,41 +373,52 @@ function render(rockets, checkpoints, generation, topAliveScore){
         ctx.arc(rockets[r].x, rockets[r].y, 1, 0, math.pi*2, false);
         ctx.closePath();
         ctx.fill();
-        ctx.fillText("("+rockets[r].born+" x="+rockets[r].x.toFixed(1)+", y="+rockets[r].y.toFixed(1)+", t="+rockets[r].t.toFixed(1)+", w="+rockets[r].w.toFixed(1)+", Score:"+rockets[r].score.toFixed(2)+")", 0, 400+12*renderedRocket)
+        ctx.fillText(rockets[r].born, 0, 400+12*renderedRocket);
+        ctx.fillText(rockets[r].x.toFixed(1), 60, 400+12*renderedRocket);
+        ctx.fillText(rockets[r].y.toFixed(1), 110, 400+12*renderedRocket);
+        ctx.fillText(rockets[r].t.toFixed(1), 160, 400+12*renderedRocket);
+        ctx.fillText(rockets[r].w.toFixed(1), 210, 400+12*renderedRocket);
+        ctx.fillText(rockets[r].score.toFixed(2), 260, 400+12*renderedRocket);
         if(rockets[r].alive){
             if(rockets[r].wasd[0]){
-                ctx.fillText("W", 280, 400+12*renderedRocket);
+                ctx.fillText("W", 310, 400+12*renderedRocket);
             }
             if(rockets[r].wasd[1]){
-                ctx.fillText("A", 295, 400+12*renderedRocket);
+                ctx.fillText("A", 320, 400+12*renderedRocket);
             }
             if(rockets[r].wasd[2]){
-                ctx.fillText("S", 310, 400+12*renderedRocket);
+                ctx.fillText("S", 330, 400+12*renderedRocket);
             }
             if(rockets[r].wasd[3]){
-                ctx.fillText("D", 325, 400+12*renderedRocket);
+                ctx.fillText("D", 340, 400+12*renderedRocket);
             }
         }else{
-            ctx.fillText("!", 280, 400+12*renderedRocket);
+            ctx.fillText("!", 310, 400+12*renderedRocket);
         }
     }
+    ctx.fillText("Born", 0, 390);
+    ctx.fillText("x", 60, 390);
+    ctx.fillText("y", 110, 390);
+    ctx.fillText("t", 160, 390);
+    ctx.fillText("w", 210, 390);
+    ctx.fillText("Score", 260, 390);
     ctx.strokeStyle="black";
     ctx.beginPath();
-    ctx.moveTo(750, 600);
-    ctx.lineTo(750, 700);
+    ctx.moveTo(800, 600);
+    ctx.lineTo(800, 700);
     ctx.lineTo(1200, 700);
     ctx.stroke();
     var historyMax=math.max(topScoreHistory);
     ctx.beginPath();
-    ctx.moveTo(750, 700-topScoreHistory[0]/historyMax*100);
+    ctx.moveTo(800, 700-topScoreHistory[0]/historyMax*100);
     for(var i=1;i<topScoreHistory.length;i++){
-        ctx.lineTo(750+i/(topScoreHistory.length-1)*450, 700-topScoreHistory[i]/historyMax*100);
+        ctx.lineTo(800+i/(topScoreHistory.length-1)*400, 700-topScoreHistory[i]/historyMax*100);
     }
     ctx.stroke();
-    ctx.fillText(historyMax.toFixed(2), 720, 620);
+    ctx.fillText(historyMax.toFixed(2), 770, 606);
     ctx.fillText((1/elapsedTime).toFixed(1)+" fps", 0, 12);
-    ctx.fillText(aliveRocket+"", 50, 12);
-    ctx.fillText("Gen "+generation, 80, 12);
+    ctx.fillText("Alive: "+aliveRocket+"/"+INITIAL_ROCKETS, 80, 24);
+    ctx.fillText("Gen: "+generation, 80, 12);
     ctx.fillText("Top: "+topAliveScore.toFixed(2), 0, 24);
     return aliveRocket;
 }
