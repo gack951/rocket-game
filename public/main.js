@@ -5,11 +5,9 @@ var INITIAL_ROCKETS=25;
 var ELITE_NUM=5;
 var speeds={
     WSAcceleration: 0.5,
-    ADAcceleration: math.pi/64,
+    ADAcceleration: math.pi/32,
     wScale: 1,
     vScale: 10,
-    speedMax: 10,
-    rotateMax: 2*math.pi,
 }
 var SENSOR_SIZE=10;
 var HIDDEN_SIZE=32;
@@ -245,7 +243,7 @@ class Rocket{
             }
             this.sensors[i]=d/this.sensorDistance[i];
         }
-        this.sensors[8]=this.w/speeds.rotateMax;
+        this.sensors[8]=this.w;
     }
 
     computeNN(){
@@ -282,26 +280,18 @@ class Rocket{
 
     move(){
         if(this.wasd[0]){
-            if(math.norm([this.vx+math.cos(this.t)*speeds.WSAcceleration,this.vy+math.sin(this.t)*speeds.WSAcceleration])<speeds.speedMax){
-                this.vx+=math.cos(this.t)*speeds.WSAcceleration;
-                this.vy+=math.sin(this.t)*speeds.WSAcceleration;
-            }
+            this.vx+=math.cos(this.t)*speeds.WSAcceleration;
+            this.vy+=math.sin(this.t)*speeds.WSAcceleration;
         }
         if(this.wasd[2]){
-            if(math.norm([this.vx-math.cos(this.t)*speeds.WSAcceleration,this.vy-math.sin(this.t)*speeds.WSAcceleration])<speeds.speedMax){
-                this.vx-=math.cos(this.t)*speeds.WSAcceleration;
-                this.vy-=math.sin(this.t)*speeds.WSAcceleration;
-            }
+            this.vx-=math.cos(this.t)*speeds.WSAcceleration;
+            this.vy-=math.sin(this.t)*speeds.WSAcceleration;
         }
         if(this.wasd[1]){
-            if(this.w-speeds.ADAcceleration>-speeds.rotateMax){
-                this.w-=speeds.ADAcceleration;
-            }
+            this.w-=speeds.ADAcceleration;
         }
         if(this.wasd[3]){
-            if(this.w+speeds.ADAcceleration<speeds.rotateMax){
-                this.w+=speeds.ADAcceleration; 
-            }
+            this.w+=speeds.ADAcceleration; 
         }
     
         this.t+=this.w*speeds.wScale*timeInterval;
