@@ -182,7 +182,7 @@ class Rocket{
         this.distanceToNextCheckpoint=0;
         this.score=0;
         this.sensorDistance=[200, 200, 50, 200, 200, 200, 50, 200];
-        this.sensors=new Array(SENSOR_SIZE);
+        this.sensors=math.zeros(SENSOR_SIZE)._data;
         this.sensors[SENSOR_SIZE-1]=1;
         this.NN_A=math.random([SENSOR_SIZE, HIDDEN_SIZE], -1, 1);
         this.NN_hidden=[];
@@ -209,6 +209,8 @@ class Rocket{
         this.w=0;
         this.lastCheckpoint=0;
         this.distanceToNextCheckpoint=0;
+        this.sensors=math.zeros(SENSOR_SIZE)._data;
+        this.sensors[SENSOR_SIZE-1]=1;
         this.NN_hidden=[];
         for(var i=0;i<HIDDEN_LAYER;i++){
             this.NN_hidden.push(math.zeros(HIDDEN_SIZE)._data);
@@ -221,19 +223,24 @@ class Rocket{
             return;
         }
         for(var i=0;i<8;i++){
-            /*for(var d=1;d<=this.sensorDistance[i];d++){
-                if(!ctx.isPointInPath(map, this.x+d*math.cos(this.t+sensorDirections[i]), this.y+d*math.sin(this.t+sensorDirections[i]))){
-                    break;
-                }
-                this.sensors[i]=1-d/this.sensorDistance[i];
-            }*/
-            // binary search may be not suitable for small corners
-            var d=this.sensorDistance[i]/2;
-            for(var dd=this.sensorDistance[i]/4; dd>=1; dd/=2){
-                if(ctx.isPointInPath(map, this.x+d*math.cos(this.t+sensorDirections[i]), this.y+d*math.sin(this.t+sensorDirections[i]))){
-                    d+=dd;
+            var d=this.sensors[i]*this.sensorDistance[i];
+            var initialIsPointInPath=ctx.isPointInPath(map, this.x+d*math.cos(this.t+sensorDirections[i]), this.y+d*math.sin(this.t+sensorDirections[i]));
+            if(d>=this.sensorDistance[i]){
+                if(initialIsPointInPath){
+                    continue;
                 }else{
-                    d-=dd;
+                    d--;
+                    initialIsPointInPath=ctx.isPointInPath(map, this.x+d*math.cos(this.t+sensorDirections[i]), this.y+d*math.sin(this.t+sensorDirections[i]));
+                }
+            }
+            for(;d<this.sensorDistance[i]&&d>=0;){
+                if(initialIsPointInPath){
+                    d++;
+                }else{
+                    d--;
+                }
+                if(initialIsPointInPath!=ctx.isPointInPath(map, this.x+d*math.cos(this.t+sensorDirections[i]), this.y+d*math.sin(this.t+sensorDirections[i]))){
+                    break;
                 }
             }
             this.sensors[i]=d/this.sensorDistance[i];
@@ -275,18 +282,14 @@ class Rocket{
 
     move(){
         if(this.wasd[0]){
-            if(this.vx+math.cos(this.t)*speeds.WSAcceleration<speeds.speedMax && this.vx+math.cos(this.t)*speeds.WSAcceleration>-speeds.speedMax){
+            if(math.norm([this.vx+math.cos(this.t)*speeds.WSAcceleration,this.vy+math.sin(this.t)*speeds.WSAcceleration])<speeds.speedMax){
                 this.vx+=math.cos(this.t)*speeds.WSAcceleration;
-            }
-            if(this.vy+math.sin(this.t)*speeds.WSAcceleration<speeds.speedMax && this.vy+math.sin(this.t)*speeds.WSAcceleration>-speeds.speedMax){
                 this.vy+=math.sin(this.t)*speeds.WSAcceleration;
             }
         }
         if(this.wasd[2]){
-            if(this.vx-math.cos(this.t)*speeds.WSAcceleration<speeds.speedMax && this.vx-math.cos(this.t)*speeds.WSAcceleration>-speeds.speedMax){
+            if(math.norm([this.vx-math.cos(this.t)*speeds.WSAcceleration,this.vy-math.sin(this.t)*speeds.WSAcceleration])<speeds.speedMax){
                 this.vx-=math.cos(this.t)*speeds.WSAcceleration;
-            }
-            if(this.vy-math.sin(this.t)*speeds.WSAcceleration<speeds.speedMax && this.vy-math.sin(this.t)*speeds.WSAcceleration>-speeds.speedMax){
                 this.vy-=math.sin(this.t)*speeds.WSAcceleration;
             }
         }
@@ -346,7 +349,7 @@ function render(){
             // sensor dots
             /*for(var i=0;i<8;i++){
                 ctx.beginPath();
-                ctx.arc(rockets[r].x+(1-rockets[r].sensors[i])*rockets[r].sensorDistance[i]*math.cos(rockets[r].t+sensorDirections[i]), rockets[r].y+(1-rockets[r].sensors[i])*rockets[r].sensorDistance[i]*math.sin(rockets[r].t+sensorDirections[i]), 1, 0, math.pi*2, false);
+                ctx.arc(rockets[r].x+rockets[r].sensors[i]*rockets[r].sensorDistance[i]*math.cos(rockets[r].t+sensorDirections[i]), rockets[r].y+rockets[r].sensors[i]*rockets[r].sensorDistance[i]*math.sin(rockets[r].t+sensorDirections[i]), 1, 0, math.pi*2, false);
                 ctx.closePath();
                 ctx.fill();
             }*/
