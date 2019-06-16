@@ -105,7 +105,7 @@ function update(timestamp){
                 // mutation
                 for(var j=0;j<SENSOR_SIZE;j++){
                     for(var k=0;k<HIDDEN_SIZE;k++){
-                        if(math.random()<0.03){
+                        if(math.random()<0.05){
                             newRockets[newRockets.length-1].NN_A[j][k]=math.random(-1, 1);
                         }
                     }
@@ -113,14 +113,14 @@ function update(timestamp){
                 for(var l=0;l<HIDDEN_LAYER;l++){
                     for(var j=0;j<HIDDEN_SIZE;j++){
                         for(var k=0;k<HIDDEN_SIZE;k++){
-                            if(math.random()<0.03){
+                            if(math.random()<0.05){
                                 newRockets[newRockets.length-1].NN_R[l][j][k]=math.random(-1, 1);
                             }
                         }
                     }
                     for(var j=0;j<HIDDEN_SIZE;j++){
                         for(var k=0;k<HIDDEN_SIZE;k++){
-                            if(math.random()<0.02){
+                            if(math.random()<0.05){
                                 newRockets[newRockets.length-1].NN_F[l][j][k]=math.random(-1, 1);
                             }
                         }
@@ -128,7 +128,7 @@ function update(timestamp){
                 }
                 for(var j=0;j<HIDDEN_SIZE;j++){
                     for(var k=0;k<OUTPUT_SIZE;k++){
-                        if(math.random()<0.02){
+                        if(math.random()<0.05){
                             newRockets[newRockets.length-1].NN_B[j][k]=math.random(-1, 1);
                         }
                     }
