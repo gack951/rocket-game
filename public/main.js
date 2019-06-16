@@ -11,13 +11,15 @@ var speeds={
 }
 var SENSOR_SIZE=10;
 var HIDDEN_SIZE=32;
-var HIDDEN_LAYER=2;
+var HIDDEN_LAYER=4;
 var OUTPUT_SIZE=4;
 var sensorDirectionUnit=64;
 var sensorDirections=[0, math.pi/sensorDirectionUnit, math.pi/2, math.pi*(sensorDirectionUnit-1)/sensorDirectionUnit, math.pi, math.pi*(sensorDirectionUnit+1)/sensorDirectionUnit, math.pi*3/2, math.pi*(2*sensorDirectionUnit-1)/sensorDirectionUnit];
 var checkpoints=[[390, 50], [970, 52], [1040, 170], [855, 205], [790, 430], [920, 370], [1140, 175], [1245, 290], [550, 595], [535, 345], [410, 245], [110, 330], [20, 205], [95, 75]];
 var startCheckpoint=0;
 var enableRNN=false;
+var NNRandomMax=4;
+var mutationRate=0.03;
 
 // global variables
 var ctx;
@@ -105,31 +107,31 @@ function update(timestamp){
                 // mutation
                 for(var j=0;j<SENSOR_SIZE;j++){
                     for(var k=0;k<HIDDEN_SIZE;k++){
-                        if(math.random()<0.05){
-                            newRockets[newRockets.length-1].NN_A[j][k]=math.random(-1, 1);
+                        if(math.random()<mutationRate){
+                            newRockets[newRockets.length-1].NN_A[j][k]=math.random(-NNRandomMax, NNRandomMax);
                         }
                     }
                 }
                 for(var l=0;l<HIDDEN_LAYER;l++){
                     for(var j=0;j<HIDDEN_SIZE;j++){
                         for(var k=0;k<HIDDEN_SIZE;k++){
-                            if(math.random()<0.05){
-                                newRockets[newRockets.length-1].NN_R[l][j][k]=math.random(-1, 1);
+                            if(math.random()<mutationRate){
+                                newRockets[newRockets.length-1].NN_R[l][j][k]=math.random(-NNRandomMax, NNRandomMax);
                             }
                         }
                     }
                     for(var j=0;j<HIDDEN_SIZE;j++){
                         for(var k=0;k<HIDDEN_SIZE;k++){
-                            if(math.random()<0.05){
-                                newRockets[newRockets.length-1].NN_F[l][j][k]=math.random(-1, 1);
+                            if(math.random()<mutationRate){
+                                newRockets[newRockets.length-1].NN_F[l][j][k]=math.random(-NNRandomMax, NNRandomMax);
                             }
                         }
                     }
                 }
                 for(var j=0;j<HIDDEN_SIZE;j++){
                     for(var k=0;k<OUTPUT_SIZE;k++){
-                        if(math.random()<0.05){
-                            newRockets[newRockets.length-1].NN_B[j][k]=math.random(-1, 1);
+                        if(math.random()<mutationRate){
+                            newRockets[newRockets.length-1].NN_B[j][k]=math.random(-NNRandomMax, NNRandomMax);
                         }
                     }
                 }
@@ -193,16 +195,16 @@ class Rocket{
         this.sensorDistance=[200, 200, 50, 200, 200, 200, 50, 200];
         this.sensors=math.zeros(SENSOR_SIZE)._data;
         this.sensors[SENSOR_SIZE-1]=1;
-        this.NN_A=math.random([SENSOR_SIZE, HIDDEN_SIZE], -1, 1);
+        this.NN_A=math.random([SENSOR_SIZE, HIDDEN_SIZE], -NNRandomMax, NNRandomMax);
         this.NN_hidden=[];
         this.NN_R=[];
         this.NN_F=[];
         for(var i=0;i<HIDDEN_LAYER;i++){
             this.NN_hidden.push(math.zeros(HIDDEN_SIZE)._data);
-            this.NN_R.push(math.random([HIDDEN_SIZE, HIDDEN_SIZE], -1, 1));
-            this.NN_F.push(math.random([HIDDEN_SIZE, HIDDEN_SIZE], -1, 1));
+            this.NN_R.push(math.random([HIDDEN_SIZE, HIDDEN_SIZE], -NNRandomMax, NNRandomMax));
+            this.NN_F.push(math.random([HIDDEN_SIZE, HIDDEN_SIZE], -NNRandomMax, NNRandomMax));
         }
-        this.NN_B=math.random([HIDDEN_SIZE, OUTPUT_SIZE], -1, 1);
+        this.NN_B=math.random([HIDDEN_SIZE, OUTPUT_SIZE], -NNRandomMax, NNRandomMax);
         this.NN_output=new Array(OUTPUT_SIZE);
         this.wasd=new Array(4);
         this.born="random";
@@ -329,9 +331,9 @@ function render(){
     ctx.clearRect(0,0, SCREEN_WIDTH, SCREEN_HEIGHT);
     ctx.strokeStyle="black";
     ctx.stroke(sugoMap);
-    ctx.strokeRect(200, 0, 150, 25);
+    ctx.strokeRect(200, 0, 150, 24);
     ctx.fillStyle="black";
-    ctx.fillText("Next Generation (R)", 212, 17);
+    ctx.fillText("Next Generation (R)", 212, 16);
     for(var c=0;c<checkpoints.length;c++){
         ctx.strokeStyle="green";
         ctx.beginPath();
