@@ -275,28 +275,28 @@ class Rocket{
 
     move(){
         if(this.wasd[0]){
-            if(this.vx<speeds.speedMax){
+            if(this.vx+math.cos(this.t)*speeds.WSAcceleration<speeds.speedMax && this.vx+math.cos(this.t)*speeds.WSAcceleration>-speeds.speedMax){
                 this.vx+=math.cos(this.t)*speeds.WSAcceleration;
             }
-            if(this.vy<speeds.speedMax){
+            if(this.vy+math.sin(this.t)*speeds.WSAcceleration<speeds.speedMax && this.vy+math.sin(this.t)*speeds.WSAcceleration>-speeds.speedMax){
                 this.vy+=math.sin(this.t)*speeds.WSAcceleration;
             }
         }
         if(this.wasd[2]){
-            if(this.vx>-speeds.speedMax){
+            if(this.vx-math.cos(this.t)*speeds.WSAcceleration<speeds.speedMax && this.vx-math.cos(this.t)*speeds.WSAcceleration>-speeds.speedMax){
                 this.vx-=math.cos(this.t)*speeds.WSAcceleration;
             }
-            if(this.vy>-speeds.speedMax){
+            if(this.vy-math.sin(this.t)*speeds.WSAcceleration<speeds.speedMax && this.vy-math.sin(this.t)*speeds.WSAcceleration>-speeds.speedMax){
                 this.vy-=math.sin(this.t)*speeds.WSAcceleration;
             }
         }
         if(this.wasd[1]){
-            if(this.w>-speeds.rotateMax){
+            if(this.w-speeds.ADAcceleration>-speeds.rotateMax){
                 this.w-=speeds.ADAcceleration;
             }
         }
         if(this.wasd[3]){
-            if(this.w<speeds.rotateMax){
+            if(this.w+speeds.ADAcceleration<speeds.rotateMax){
                 this.w+=speeds.ADAcceleration; 
             }
         }
