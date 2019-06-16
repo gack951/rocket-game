@@ -15,7 +15,8 @@ var SENSOR_SIZE=10;
 var HIDDEN_SIZE=32;
 var HIDDEN_LAYER=2;
 var OUTPUT_SIZE=4;
-var sensorDirections=[0, math.pi/64, math.pi/2, math.pi*63/64, math.pi, math.pi*65/64, math.pi*3/2, math.pi*127/64];
+var sensorDirectionUnit=64;
+var sensorDirections=[0, math.pi/sensorDirectionUnit, math.pi/2, math.pi*(sensorDirectionUnit-1)/sensorDirectionUnit, math.pi, math.pi*(sensorDirectionUnit+1)/sensorDirectionUnit, math.pi*3/2, math.pi*(2*sensorDirectionUnit-1)/sensorDirectionUnit];
 var checkpoints=[[390, 50], [970, 52], [1040, 170], [855, 205], [790, 430], [920, 370], [1140, 175], [1245, 290], [550, 595], [535, 345], [410, 245], [110, 330], [20, 205], [95, 75]];
 var startCheckpoint=0;
 var enableRNN=false;
@@ -210,7 +211,7 @@ class Rocket{
         this.distanceToNextCheckpoint=0;
         this.NN_hidden=[];
         for(var i=0;i<HIDDEN_LAYER;i++){
-            this.NN_hidden.push(math.zeros(HIDDEN_SIZE));
+            this.NN_hidden.push(math.zeros(HIDDEN_SIZE)._data);
         }
     }
 
